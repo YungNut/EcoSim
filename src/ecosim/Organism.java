@@ -18,9 +18,9 @@ public class Organism {
 		this.size = size;
 		
 		Random r = new Random();
-		colorR = (byte) (r.nextInt() % 150);
-		colorG = (byte) (r.nextInt() % 150);
-		colorB = (byte) (r.nextInt() % 150);
+		colorR = (byte) ((r.nextInt() & Integer.MAX_VALUE) % 150);
+		colorG = (byte) ((r.nextInt() & Integer.MAX_VALUE) % 150);
+		colorB = (byte) ((r.nextInt() & Integer.MAX_VALUE) % 150);
 	}
 	
 	

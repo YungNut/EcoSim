@@ -77,13 +77,18 @@ public class Ecoclient {
 
 	int[] mouseButtons;
 	int scrollDir = 0;
-	
-	float zoomWidth = windowWidth;
-	float zoomHeight = windowHeight;
-	
+
+	int zoomWidth = windowWidth;
+	int zoomHeight = windowHeight;
+
 	float transX = 0;
 	float transY = 0;
+
+	double pmouseX = 0;
+	double pmouseY = 0;
 	
+	double scalex = 1;
+
 	float translate = 1f;
 
 	ArrayList<Organism> organisms;
@@ -137,18 +142,24 @@ public class Ecoclient {
 		});
 
 		glfwSetScrollCallback(window, (window, xoffset, yoffset) -> {
-			scrollDir = (int) yoffset;
 			
-			zoomWidth *= 1+(float)-yoffset/10;
-			zoomHeight *= 1+(float)-yoffset/10;
-			
-			transX += 1;
+			if(yoffset > 0) {
+				yoffset = 0.1;
+			} else {
+				yoffset = -0.1;
+			}
 
+			zoomWidth *= 1 + (float) -yoffset;
+			zoomHeight *= 1 + (float) -yoffset;
 			
-			glScalef(1+(float)yoffset/10, 1+(float)yoffset/10, 1);
+			System.out.println(yoffset);
+
+			glScalef(1+(float)yoffset, 1f + (float)yoffset, 1f);
+			scalex *= 1 + (float) yoffset / 10;
+			System.out.println(zoomWidth);
 		});
 
-		 //Get the thread stack and push a new frame
+		// Get the thread stack and push a new frame
 //		try (MemoryStack stack = stackPush()) {
 //			IntBuffer pWidth = stack.mallocInt(1); // int*
 //			IntBuffer pHeight = stack.mallocInt(1); // int*
@@ -171,30 +182,27 @@ public class Ecoclient {
 		glfwShowWindow(window);
 
 		GL.createCapabilities();
-		
+
 //		glEnable(GL_MULTISAMPLE); 
 		glClearColor(0.16f, 0.7f, 0.33f, 1f);
-		glViewport(0, 0, windowWidth, windowHeight);
-	    glMatrixMode(GL_PROJECTION);
+		glViewport(0, 0, windowWidth * 2, windowHeight * 2);
+		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glOrtho(-windowWidth/2, windowWidth/2, -windowHeight/2, windowHeight/2, -1, 1);
+		glOrtho(-windowWidth / 2, windowWidth / 2, -windowHeight / 2, windowHeight / 2, -1, 1);
 		glScalef(1, -1, 1);
 //		glTranslatef(0, -windowHeight, 0);
-		
+
 	}
 
 	private void loop() {
 		// Rendering loop
 		while (!glfwWindowShouldClose(window)) {
-			
-			glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-			
 
-		    for (Organism o : organisms) {
-		    	drawOrganism(o);
-		    }
-			
-			
+			glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+			for (Organism o : organisms) {
+				drawOrganism(o);
+			}
 
 			glfwSwapBuffers(window); // swap the color buffers
 
@@ -203,13 +211,23 @@ public class Ecoclient {
 
 			// Reset Scroll direction to neutral
 			scrollDir = 0;
-			
 
 			// Calculate and print FPS
 			long time = System.nanoTime();
 			double framerate = 1000 / ((time - lastFrameTime) / 1000000.0);
-		    //System.out.println("Frame Rate: " + framerate + " fps");
+			// System.out.println("Frame Rate: " + framerate + " fps");
 			lastFrameTime = time;
+
+			if (mouseButtons[0] == 1) {
+				double translatex = (mouseX(window) * (float)zoomWidth / windowWidth - pmouseX * zoomWidth / windowWidth);
+				// System.out.println(mouseX(window) * zoomWidth / windowWidth);
+				double translatey = (mouseY(window) * zoomHeight / windowHeight - pmouseY * zoomHeight / windowHeight);
+
+				glTranslated(translatex, translatey, 0);
+			}
+
+			pmouseX = mouseX(window);
+			pmouseY = mouseY(window);
 
 		}
 
@@ -233,9 +251,9 @@ public class Ecoclient {
 		float r = o.size / 2;
 
 		glBegin(GL_POLYGON);
-		glColor3ub(o.colorR, o.colorB, o.colorG);
-//		glColor3f(0,0,0);
-		
+		glColor3f(Math.abs(o.colorR) / 255f, Math.abs(o.colorG) / 255f, Math.abs(o.colorB) / 255f);
+//		System.out.println(o.colorR + ", " + o.colorG + ", " + o.colorB);
+
 		for (int i = 0; i < segmentCount; i++) {
 			float theta = (float) (i * 2 * Math.PI / segmentCount);
 
