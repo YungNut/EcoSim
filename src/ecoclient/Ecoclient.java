@@ -134,7 +134,7 @@ public class Ecoclient {
 		// Input callbacks
 		glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
 			if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-				glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
+				glfwSetWindowShouldClose(window, true); 
 		});
 
 		glfwSetMouseButtonCallback(window, (window, button, action, mods) -> {
@@ -143,19 +143,19 @@ public class Ecoclient {
 
 		glfwSetScrollCallback(window, (window, xoffset, yoffset) -> {
 			
+			float zoomScale = 1;
+			
 			if(yoffset > 0) {
-				yoffset = 0.1;
+				zoomScale += 0.1;
 			} else {
-				yoffset = -0.1;
+				zoomScale -= 0.1;
 			}
 
-			zoomWidth *= 1 + (float) -yoffset;
-			zoomHeight *= 1 + (float) -yoffset;
-			
-			System.out.println(yoffset);
+			zoomWidth *= zoomScale;
+			zoomHeight *= zoomScale;
 
-			glScalef(1+(float)yoffset, 1f + (float)yoffset, 1f);
-			scalex *= 1 + (float) yoffset / 10;
+			glScalef(zoomScale, zoomScale, 1f);
+			scalex *= 1 + (float) zoomScale / 10;
 			System.out.println(zoomWidth);
 		});
 
@@ -190,8 +190,6 @@ public class Ecoclient {
 		glLoadIdentity();
 		glOrtho(-windowWidth / 2, windowWidth / 2, -windowHeight / 2, windowHeight / 2, -1, 1);
 		glScalef(1, -1, 1);
-//		glTranslatef(0, -windowHeight, 0);
-
 	}
 
 	private void loop() {
@@ -219,9 +217,8 @@ public class Ecoclient {
 			lastFrameTime = time;
 
 			if (mouseButtons[0] == 1) {
-				double translatex = (mouseX(window) * (float)zoomWidth / windowWidth - pmouseX * zoomWidth / windowWidth);
-				// System.out.println(mouseX(window) * zoomWidth / windowWidth);
-				double translatey = (mouseY(window) * zoomHeight / windowHeight - pmouseY * zoomHeight / windowHeight);
+				double translatex = (mouseX(window) * windowWidth / zoomWidth - pmouseX * windowWidth / zoomWidth);
+				double translatey = (mouseY(window) * windowHeight / zoomHeight - pmouseY * windowHeight / zoomHeight);
 
 				glTranslated(translatex, translatey, 0);
 			}
@@ -252,7 +249,6 @@ public class Ecoclient {
 
 		glBegin(GL_POLYGON);
 		glColor3f(Math.abs(o.colorR) / 255f, Math.abs(o.colorG) / 255f, Math.abs(o.colorB) / 255f);
-//		System.out.println(o.colorR + ", " + o.colorG + ", " + o.colorB);
 
 		for (int i = 0; i < segmentCount; i++) {
 			float theta = (float) (i * 2 * Math.PI / segmentCount);
