@@ -86,7 +86,7 @@ public class Ecoclient {
 
 	double pmouseX = 0;
 	double pmouseY = 0;
-	
+
 	double scalex = 1;
 
 	float translate = 1f;
@@ -134,7 +134,7 @@ public class Ecoclient {
 		// Input callbacks
 		glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
 			if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-				glfwSetWindowShouldClose(window, true); 
+				glfwSetWindowShouldClose(window, true);
 		});
 
 		glfwSetMouseButtonCallback(window, (window, button, action, mods) -> {
@@ -142,21 +142,24 @@ public class Ecoclient {
 		});
 
 		glfwSetScrollCallback(window, (window, xoffset, yoffset) -> {
-			
+
 			float zoomScale = 1;
-			
-			if(yoffset > 0) {
+
+			if (yoffset > 0) {
 				zoomScale += 0.1;
 			} else {
 				zoomScale -= 0.1;
 			}
 
-			zoomWidth *= zoomScale;
-			zoomHeight *= zoomScale;
+			if (zoomWidth * zoomScale <= windowWidth * 5 && zoomWidth * zoomScale > windowWidth / 5) {
+				zoomWidth *= zoomScale;
+				zoomHeight *= zoomScale;
 
-			glScalef(zoomScale, zoomScale, 1f);
-			scalex *= 1 + (float) zoomScale / 10;
-			System.out.println(zoomWidth);
+				glTranslated(-transX, -transY, 0);
+				glScalef(zoomScale, zoomScale, 1f);
+				glTranslated(transX, transY, 0);
+				scalex *= 1 + (float) zoomScale / 10;
+			}
 		});
 
 		// Get the thread stack and push a new frame
@@ -188,7 +191,7 @@ public class Ecoclient {
 		glViewport(0, 0, windowWidth * 2, windowHeight * 2);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glOrtho(-windowWidth / 2, windowWidth / 2, -windowHeight / 2, windowHeight / 2, -1, 1);
+		glOrtho(-windowWidth, windowWidth, -windowHeight, windowHeight, -1, 1);
 		glScalef(1, -1, 1);
 	}
 
@@ -220,7 +223,10 @@ public class Ecoclient {
 				double translatex = (mouseX(window) * windowWidth / zoomWidth - pmouseX * windowWidth / zoomWidth);
 				double translatey = (mouseY(window) * windowHeight / zoomHeight - pmouseY * windowHeight / zoomHeight);
 
+				transX += translatex;
+				transY += translatey;
 				glTranslated(translatex, translatey, 0);
+//				System.out.println("(" + transX + ", " + transY + ")");
 			}
 
 			pmouseX = mouseX(window);
