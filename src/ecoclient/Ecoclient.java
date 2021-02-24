@@ -1,5 +1,7 @@
 package ecoclient;
 
+import ecosim.*;
+
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
@@ -53,6 +55,7 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 
+import ecosim.Ecosystem;
 import ecosim.Herbivore;
 import ecosim.Organism;
 import ecosim.Plant;
@@ -68,6 +71,8 @@ import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.opengl.GL15.*;
 
 public class Ecoclient {
+
+	public Ecosystem ecosystem;
 
 	private long window;
 	private long lastFrameTime = 0;
@@ -91,13 +96,9 @@ public class Ecoclient {
 
 	float translate = 1f;
 
-	ArrayList<Organism> organisms;
+	public Ecoclient(Ecosystem ecosystem) {
 
-	public Ecoclient() {
-
-		organisms = new ArrayList<Organism>();
-		organisms.add(new Herbivore(320, 200, 50));
-		organisms.add(new Plant(0, 0, 100));
+		this.ecosystem = ecosystem;
 
 		init();
 		loop();
@@ -155,6 +156,11 @@ public class Ecoclient {
 				zoomWidth *= zoomScale;
 				zoomHeight *= zoomScale;
 
+				double mXOffset = windowWidth / 2 - mouseX(window);
+				double mYOffset = windowHeight / 2 - mouseY(window);
+
+				System.out.println("X: " + mouseX(window) + "\nY: " + mouseY(window) + "\n");
+
 				glTranslated(-transX, -transY, 0);
 				glScalef(zoomScale, zoomScale, 1f);
 				glTranslated(transX, transY, 0);
@@ -179,19 +185,24 @@ public class Ecoclient {
 
 		glfwMakeContextCurrent(window);
 
+
+
 		// Enable or disable VSync
 		glfwSwapInterval(1);
 
 		glfwShowWindow(window);
 
 		GL.createCapabilities();
-
+		
+		// Move view to roughly center of the world
+		glTranslated(-ecosystem.worldWidth / 2, -ecosystem.worldHeight / 2, 0);
+		
 //		glEnable(GL_MULTISAMPLE); 
 		glClearColor(0.16f, 0.7f, 0.33f, 1f);
-		glViewport(0, 0, windowWidth * 2, windowHeight * 2);
+		glViewport(0, 0, windowWidth, windowHeight);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glOrtho(-windowWidth, windowWidth, -windowHeight, windowHeight, -1, 1);
+		glOrtho(-windowWidth / 2, windowWidth / 2, -windowHeight / 2, windowHeight / 2, -1, 1);
 		glScalef(1, -1, 1);
 	}
 
@@ -201,7 +212,7 @@ public class Ecoclient {
 
 			glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-			for (Organism o : organisms) {
+			for (Organism o : ecosystem.organisms) {
 				drawOrganism(o);
 			}
 
@@ -216,7 +227,7 @@ public class Ecoclient {
 			// Calculate and print FPS
 			long time = System.nanoTime();
 			double framerate = 1000 / ((time - lastFrameTime) / 1000000.0);
-			// System.out.println("Frame Rate: " + framerate + " fps");
+			//System.out.println("Frame Rate: " + framerate + " fps");
 			lastFrameTime = time;
 
 			if (mouseButtons[0] == 1) {
@@ -268,7 +279,10 @@ public class Ecoclient {
 	}
 
 	public static void main(String[] args) {
-		new Ecoclient();
+		Ecosystem e = new Ecosystem(1280, 720);
+		e.createAllOrganisms(0, 20, 20);
+
+		new Ecoclient(e);
 
 	}
 
