@@ -7,6 +7,8 @@ public class Organism {
 	public float x;
 	public float y;
 	public float size;
+	public boolean isAnimal;
+	public Organism target;
 	
 	public byte colorR;
 	public byte colorG;
@@ -22,6 +24,10 @@ public class Organism {
 		colorG = (byte) ((r.nextInt() & Integer.MAX_VALUE) % 150);
 		colorB = (byte) ((r.nextInt() & Integer.MAX_VALUE) % 150);
 	}
-	
+
+	public float getDistance(Organism a, Organism b) {
+		return (float)(Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y),2)));
+
+	}
 	
 }
