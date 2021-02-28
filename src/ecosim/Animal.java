@@ -3,16 +3,13 @@ package ecosim;
 
 import java.util.ArrayList;
 
-/* FOR TESTING ONLY */
-
-
 public class Animal extends Organism {
 
 	public Class foodType;
 
 	public Organism target;
 	
-	float speed = 5;
+	float speed = 1;
 
 	public Animal(float x, float y, float size) {
 		super(x, y, size);
@@ -26,7 +23,6 @@ public class Animal extends Organism {
 		for(Organism o : organisms) {
 			if(o.getClass().equals(foodType)) {
 				nearby.add(o);
-				System.out.println("Found a " + foodType.getSimpleName());
 			}
 		}
 		if(nearby.size() > 1) {
@@ -48,6 +44,29 @@ public class Animal extends Organism {
 		} else {
 			target = this;
 			System.out.println("failed");
+		}
+	}
+
+	float lastx = 0;
+	float lasty = 0;
+
+	public void moveToTarget() {
+		// Make a vector between self and target
+		float vecX = target.x - x;
+		float vecY = target.y - y;
+		// Get magnitude of vector
+		float mag = (float)Math.hypot(vecX, vecY);
+		// Normalize the vector
+		float normX = vecX / mag;
+		float normY = vecY / mag;
+		// If the organism is closer than its speed
+		if(Math.abs(mag) < speed) {
+			x = target.x;
+			y = target.y;
+		} else {
+			// Move self along vector to target, at speed
+			x += speed * normX;
+			y += speed * normY;
 		}
 	}
 	

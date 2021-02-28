@@ -15,7 +15,6 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 // Temp
 
 public class Ecoclient {
-
     public Ecosystem ecosystem;
 
     private long window;
@@ -59,6 +58,7 @@ public class Ecoclient {
     private void init() {
         // TODO Find way to get exact number of buttons on mouse
         mouseButtons = new int[5];
+
 
         // GLFW Error callbacks
         GLFWErrorCallback.createPrint(System.err).set();
@@ -140,13 +140,17 @@ public class Ecoclient {
         // Move view to roughly center of the world
         glTranslated(-ecosystem.worldWidth / 2, -ecosystem.worldHeight / 2, 0);
 
+
+
 //		glEnable(GL_MULTISAMPLE); 
         glClearColor(0.16f, 0.7f, 0.33f, 1f);
-        glViewport(0, 0, windowWidth, windowHeight);
+//        glViewport(0, 0, windowWidth, windowHeight);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(-windowWidth / 2, windowWidth / 2, -windowHeight / 2, windowHeight / 2, -1, 1);
         glScalef(1, -1, 1);
+
+
     }
 
     private void loop() {
@@ -156,9 +160,10 @@ public class Ecoclient {
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
             for (Organism o : ecosystem.organisms) {
-
-
                 drawOrganism(o);
+                if(o instanceof Animal) {
+                    ((Animal)o).moveToTarget();
+                }
             }
 
             glfwSwapBuffers(window); // swap the color buffers
@@ -206,13 +211,21 @@ public class Ecoclient {
     }
 
     public void drawOrganism(Organism o) {
-
+        if (o instanceof Animal) {
+            glBegin(GL_LINE_STRIP);
+            glLineWidth(3.8f);
+            glVertex2f(o.x, o.y);
+            glVertex2f(((Animal)o).target.x, ((Animal)o).target.y);
+            glEnd();
+        }
 
         int segmentCount = 32;
         float r = o.size / 2;
 
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBegin(GL_POLYGON);
-        glColor3f(Math.abs(o.colorR) / 255f, Math.abs(o.colorG) / 255f, Math.abs(o.colorB) / 255f);
+        glColor4f(Math.abs(o.colorR) / 255f, Math.abs(o.colorG) / 255f, Math.abs(o.colorB) / 255f, /*Math.abs(o.colorA) / 255f*/ 1);
 
         for (int i = 0; i < segmentCount; i++) {
             float theta = (float) (i * 2 * Math.PI / segmentCount);
@@ -223,14 +236,7 @@ public class Ecoclient {
             glVertex2d(o.x + cx, o.y + cy);
         }
         glEnd();
-        if (o instanceof Animal) {
-            glBegin(GL_LINES);
-            glVertex2f(o.x, o.y);
-            glVertex2f(((Animal)o).target.x, ((Animal)o).target.y);
-            glEnd();
-            //System.out.println("drew a line");
-        }
-        //System.out.println(o.isAnimal);
+        glDisable(GL_BLEND);
 
     }
 

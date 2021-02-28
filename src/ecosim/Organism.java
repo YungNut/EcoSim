@@ -13,6 +13,7 @@ public class Organism {
 	public byte colorR;
 	public byte colorG;
 	public byte colorB;
+	public byte colorA;
 	
 	public Organism(float x, float y, float size) {
 		this.x = x;
@@ -23,6 +24,7 @@ public class Organism {
 		colorR = (byte) ((r.nextInt() & Integer.MAX_VALUE) % 150);
 		colorG = (byte) ((r.nextInt() & Integer.MAX_VALUE) % 150);
 		colorB = (byte) ((r.nextInt() & Integer.MAX_VALUE) % 150);
+		colorA = (byte) 255;
 	}
 
 	public float getDistance(Organism a, Organism b) {
