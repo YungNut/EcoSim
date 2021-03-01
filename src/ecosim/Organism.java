@@ -3,11 +3,11 @@ package ecosim;
 import java.util.Random;
 
 public class Organism {
-	
 	public float x;
 	public float y;
+	public float maxSize;
 	public float size;
-	public boolean isAnimal;
+	public boolean isAlive = true;
 
 	public short species;
 	public short generation;
@@ -16,11 +16,13 @@ public class Organism {
 	public byte colorG;
 	public byte colorB;
 	public byte colorA;
+
 	
 	public Organism(float x, float y, float size) {
 		this.x = x;
 		this.y = y;
 		this.size = size;
+		this.maxSize = size*2;
 		
 		Random r = new Random();
 		colorR = (byte) ((r.nextInt() & Integer.MAX_VALUE) % 150);
@@ -29,14 +31,22 @@ public class Organism {
 		colorA = (byte) 255;
 	}
 
+	public void update(Ecosystem ecosystem) {
+		System.err.println("ERROR: Unspecified organism");
+	}
+
+	public float getDistance(Organism b) {
+		return getDistance(this, b);
+	}
 	public float getDistance(Organism a, Organism b) {
 		return (float)(Math.sqrt(Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y),2)));
-
 	}
 
 
 	public void printData() {
 		System.out.println(this.getClass().getSimpleName());
+		System.out.println("\t↳Species: " + species);
+		System.out.println("\t↳Generation: " + generation);
 		System.out.println("\t↳Position: ( " + x + ", " + y + " )");
 		System.out.println("\t↳Size: " + size);
 

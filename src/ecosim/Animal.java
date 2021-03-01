@@ -10,11 +10,32 @@ public class Animal extends Organism {
 	public Organism target;
 	
 	float speed = 1;
+	float reach = size*2.5f;
 	float health = size;
 
 	public Animal(float x, float y, float size) {
 		super(x, y, size);
-		isAnimal = true;
+	}
+
+	@Override
+	public void update(Ecosystem ecosystem) {
+		if(target == null) {
+			findFood(ecosystem.organisms);
+		}
+
+		float targetDist;
+		try {
+			targetDist = getDistance(target);
+		} catch(Exception e) {
+			findFood(ecosystem.organisms);
+			targetDist = getDistance(target);
+		}
+
+		if(targetDist > reach) {
+			moveToTarget();
+		} else {
+			huntTarget();
+		}
 	}
 
 	public void findFood(ArrayList<Organism> organisms) {
@@ -22,7 +43,7 @@ public class Animal extends Organism {
 		ArrayList<Organism> nearby = new ArrayList<Organism>();
 
 		for(Organism o : organisms) {
-			if(o.getClass().equals(foodType)) {
+			if(o.getClass().equals(foodType) && o.isAlive) {
 				nearby.add(o);
 			}
 		}
@@ -71,5 +92,7 @@ public class Animal extends Organism {
 		}
 	}
 
-	
+	public void huntTarget() {
+
+	}
 }

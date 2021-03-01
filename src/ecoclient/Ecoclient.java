@@ -42,8 +42,6 @@ public class Ecoclient {
 
     float translate = 1f;
 
-    boolean mouseDown = false;
-
     public Ecoclient(Ecosystem ecosystem) {
 
         this.ecosystem = ecosystem;
@@ -89,16 +87,17 @@ public class Ecoclient {
         });
 
         glfwSetMouseButtonCallback(window, (window, button, action, mods) -> {
+            // Sets mouse button in array to either 1 or 0, clicked or not
             mouseButtons[button] = action;
 
             if (button == 0 && action == 0) {
-                float scale = (float) zoomWidth / windowWidth;
-
+                // Convert mouse coordinates on screen to world coordinates
                 float mWorldX = (((float) mouseX(window) - windowWidth / 2) * totalZoomScale) - transX;
                 float mWorldY = (((float) mouseY(window) - windowHeight / 2) * totalZoomScale) - transY;
 
                 for (Organism o : ecosystem.organisms) {
-                    if (Math.hypot(mWorldX - o.x,mWorldY - o.y) < o.size) {
+                    // If the world mouse coordinates are inside of organism's circle,
+                    if (Math.hypot(mWorldX - o.x, mWorldY - o.y) < o.size) {
                         o.printData();
                     }
                 }
@@ -118,7 +117,7 @@ public class Ecoclient {
             if (zoomWidth * zoomScale <= windowWidth * 5 && zoomWidth * zoomScale > windowWidth / 5) {
 
                 // TODO: 2/28/2021 make screen zoom on mouse cursor rather than origin
-                
+
                 zoomWidth *= zoomScale;
                 zoomHeight *= zoomScale;
                 totalZoomScale /= zoomScale;
@@ -128,27 +127,12 @@ public class Ecoclient {
 
                 //System.out.println("X: " + mouseX(window) + "\nY: " + mouseY(window) + "\n");
 
-                glTranslated(-transX, -transY, 0);
+                glTranslated(-transX - ecosystem.worldWidth / 2, -transY - ecosystem.worldHeight / 2, 0);
                 glScalef(zoomScale, zoomScale, 1f);
-                glTranslated(transX, transY, 0);
+                glTranslated(transX + ecosystem.worldWidth / 2, transY + ecosystem.worldHeight / 2, 0);
                 scalex *= 1 + (float) zoomScale / 10;
             }
         });
-
-        // Get the thread stack and push a new frame
-//		try (MemoryStack stack = stackPush()) {
-//			IntBuffer pWidth = stack.mallocInt(1); // int*
-//			IntBuffer pHeight = stack.mallocInt(1); // int*
-//
-//			// Get the window size passed to glfwCreateWindow
-//			glfwGetWindowSize(window, pWidth, pHeight);
-//
-//			// Get the resolution of the primary monitor
-//			GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-//
-//			// Center the window
-//			glfwSetWindowPos(window, (vidmode.width() - pWidth.get(0)) / 2, (vidmode.height() - pHeight.get(0)) / 2);
-//		} // the stack frame is popped automatically
 
         glfwMakeContextCurrent(window);
 
@@ -161,8 +145,10 @@ public class Ecoclient {
         GL.createCapabilities();
 
         // Move view to roughly center of the world
-        //glTranslated(-ecosystem.worldWidth / 2, -ecosystem.worldHeight / 2, 0);
-        //glTranslated((double)-windowWidth/2, (double)-windowHeight/2, 0);
+        glTranslated(-ecosystem.worldWidth / 2, -ecosystem.worldHeight / 2, 0);
+
+        transX -= ecosystem.worldWidth / 2;
+        transY -= ecosystem.worldHeight / 2;
 
 
 //		glEnable(GL_MULTISAMPLE);
@@ -180,12 +166,17 @@ public class Ecoclient {
 
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-            for (Organism o : ecosystem.organisms) {
+            for (int i = ecosystem.organisms.size()-1; i > 0; i--) {
+                Organism o = ecosystem.organisms.get(i);
+
+                o.update(ecosystem);
                 drawOrganism(o);
-                if (o instanceof Animal) {
-                    //((Animal) o).moveToTarget();
+
+                if (o instanceof Plant && o.size <= 0.5) {
+                    ecosystem.organisms.remove(o);
                 }
             }
+
 
             glfwSwapBuffers(window); // swap the color buffers
 
@@ -202,14 +193,12 @@ public class Ecoclient {
             lastFrameTime = time;
 
             if (mouseButtons[0] == 1) {
-                mouseDown = true;
                 double translatex = (mouseX(window) * windowWidth / zoomWidth - pmouseX * windowWidth / zoomWidth);
                 double translatey = (mouseY(window) * windowHeight / zoomHeight - pmouseY * windowHeight / zoomHeight);
 
                 transX += translatex;
                 transY += translatey;
                 glTranslated(translatex, translatey, 0);
-//				System.out.println("(" + transX + ", " + transY + ")");
             }
 
 
@@ -217,7 +206,6 @@ public class Ecoclient {
             pmouseY = mouseY(window);
 
         }
-
     }
 
     // Functions to retrieve cursor position
@@ -235,11 +223,14 @@ public class Ecoclient {
 
     public void drawOrganism(Organism o) {
         if (o instanceof Animal) {
-            glBegin(GL_LINE_STRIP);
-            glLineWidth(3.8f);
-            glVertex2f(o.x, o.y);
-            glVertex2f(((Animal) o).target.x, ((Animal) o).target.y);
-            glEnd();
+            try {
+                glBegin(GL_LINE_STRIP);
+                glVertex2f(o.x, o.y);
+                glVertex2f(((Animal) o).target.x, ((Animal) o).target.y);
+                glEnd();
+            } catch (Exception e) {
+                glEnd();
+            }
         }
 
         int segmentCount = 32;
@@ -276,30 +267,7 @@ public class Ecoclient {
             }
         }
 
-//        new Ecoclient(e);
-
-        float x1 = 12;
-        float y1 = 42.565f;
-
-        float x2 = 93.2323f;
-        float y2 = 123.5345f;
-
-        Instant start = Instant.now();
-
-//        Organism organism = e.organisms.get(0);
-        int totalClose = 0;
-        for(Organism organism : e.organisms) {
-            for (Organism o : e.organisms) {
-                float dist = organism.getDistance(organism, o);
-                if (dist < 100) {
-                    totalClose++;
-                }
-            }
-        }
-
-        Instant finish = Instant.now();
-        long timeElapsed = Duration.between(start, finish).toMillis();
-        System.out.println(timeElapsed);
+        new Ecoclient(e);
 
     }
 
