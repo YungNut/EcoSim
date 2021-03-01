@@ -10,6 +10,7 @@ public class Animal extends Organism {
 	public Organism target;
 	
 	float speed = 1;
+	float health = size;
 
 	public Animal(float x, float y, float size) {
 		super(x, y, size);
@@ -69,5 +70,6 @@ public class Animal extends Organism {
 			y += speed * normY;
 		}
 	}
+
 	
 }

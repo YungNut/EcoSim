@@ -6,6 +6,8 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
 import java.nio.DoubleBuffer;
+import java.time.Duration;
+import java.time.Instant;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -28,6 +30,7 @@ public class Ecoclient {
 
     int zoomWidth = windowWidth;
     int zoomHeight = windowHeight;
+    float totalZoomScale = 1;
 
     float transX = 0;
     float transY = 0;
@@ -38,6 +41,8 @@ public class Ecoclient {
     double scalex = 1;
 
     float translate = 1f;
+
+    boolean mouseDown = false;
 
     public Ecoclient(Ecosystem ecosystem) {
 
@@ -54,6 +59,7 @@ public class Ecoclient {
         glfwTerminate();
         glfwSetErrorCallback(null).free();
     }
+
 
     private void init() {
         // TODO Find way to get exact number of buttons on mouse
@@ -84,6 +90,19 @@ public class Ecoclient {
 
         glfwSetMouseButtonCallback(window, (window, button, action, mods) -> {
             mouseButtons[button] = action;
+
+            if (button == 0 && action == 0) {
+                float scale = (float) zoomWidth / windowWidth;
+
+                float mWorldX = (((float) mouseX(window) - windowWidth / 2) * totalZoomScale) - transX;
+                float mWorldY = (((float) mouseY(window) - windowHeight / 2) * totalZoomScale) - transY;
+
+                for (Organism o : ecosystem.organisms) {
+                    if (Math.hypot(mWorldX - o.x,mWorldY - o.y) < o.size) {
+                        o.printData();
+                    }
+                }
+            }
         });
 
         glfwSetScrollCallback(window, (window, xoffset, yoffset) -> {
@@ -97,8 +116,12 @@ public class Ecoclient {
             }
 
             if (zoomWidth * zoomScale <= windowWidth * 5 && zoomWidth * zoomScale > windowWidth / 5) {
+
+                // TODO: 2/28/2021 make screen zoom on mouse cursor rather than origin
+                
                 zoomWidth *= zoomScale;
                 zoomHeight *= zoomScale;
+                totalZoomScale /= zoomScale;
 
                 double mXOffset = windowWidth / 2 - mouseX(window);
                 double mYOffset = windowHeight / 2 - mouseY(window);
@@ -138,19 +161,17 @@ public class Ecoclient {
         GL.createCapabilities();
 
         // Move view to roughly center of the world
-        glTranslated(-ecosystem.worldWidth / 2, -ecosystem.worldHeight / 2, 0);
+        //glTranslated(-ecosystem.worldWidth / 2, -ecosystem.worldHeight / 2, 0);
+        //glTranslated((double)-windowWidth/2, (double)-windowHeight/2, 0);
 
 
-
-//		glEnable(GL_MULTISAMPLE); 
+//		glEnable(GL_MULTISAMPLE);
         glClearColor(0.16f, 0.7f, 0.33f, 1f);
 //        glViewport(0, 0, windowWidth, windowHeight);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(-windowWidth / 2, windowWidth / 2, -windowHeight / 2, windowHeight / 2, -1, 1);
         glScalef(1, -1, 1);
-
-
     }
 
     private void loop() {
@@ -161,8 +182,8 @@ public class Ecoclient {
 
             for (Organism o : ecosystem.organisms) {
                 drawOrganism(o);
-                if(o instanceof Animal) {
-                    ((Animal)o).moveToTarget();
+                if (o instanceof Animal) {
+                    //((Animal) o).moveToTarget();
                 }
             }
 
@@ -181,6 +202,7 @@ public class Ecoclient {
             lastFrameTime = time;
 
             if (mouseButtons[0] == 1) {
+                mouseDown = true;
                 double translatex = (mouseX(window) * windowWidth / zoomWidth - pmouseX * windowWidth / zoomWidth);
                 double translatey = (mouseY(window) * windowHeight / zoomHeight - pmouseY * windowHeight / zoomHeight);
 
@@ -189,6 +211,7 @@ public class Ecoclient {
                 glTranslated(translatex, translatey, 0);
 //				System.out.println("(" + transX + ", " + transY + ")");
             }
+
 
             pmouseX = mouseX(window);
             pmouseY = mouseY(window);
@@ -215,7 +238,7 @@ public class Ecoclient {
             glBegin(GL_LINE_STRIP);
             glLineWidth(3.8f);
             glVertex2f(o.x, o.y);
-            glVertex2f(((Animal)o).target.x, ((Animal)o).target.y);
+            glVertex2f(((Animal) o).target.x, ((Animal) o).target.y);
             glEnd();
         }
 
@@ -241,8 +264,8 @@ public class Ecoclient {
     }
 
     public static void main(String[] args) {
-        Ecosystem e = new Ecosystem(1280*4, 720*4);
-        e.createAllOrganisms(50, 20, 200);
+        Ecosystem e = new Ecosystem(1280 * 4, 720 * 4);
+        e.createAllOrganisms(5, 10, 5, 4, 20, 10);
 
         for (Organism o : e.organisms) {
             if (o instanceof Herbivore) {
@@ -253,7 +276,30 @@ public class Ecoclient {
             }
         }
 
-        new Ecoclient(e);
+//        new Ecoclient(e);
+
+        float x1 = 12;
+        float y1 = 42.565f;
+
+        float x2 = 93.2323f;
+        float y2 = 123.5345f;
+
+        Instant start = Instant.now();
+
+//        Organism organism = e.organisms.get(0);
+        int totalClose = 0;
+        for(Organism organism : e.organisms) {
+            for (Organism o : e.organisms) {
+                float dist = organism.getDistance(organism, o);
+                if (dist < 100) {
+                    totalClose++;
+                }
+            }
+        }
+
+        Instant finish = Instant.now();
+        long timeElapsed = Duration.between(start, finish).toMillis();
+        System.out.println(timeElapsed);
 
     }
 
