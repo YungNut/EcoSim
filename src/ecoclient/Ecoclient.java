@@ -4,7 +4,9 @@ import ecosim.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
+import sun.font.TrueTypeFont;
 
+import java.awt.*;
 import java.nio.DoubleBuffer;
 import java.time.Duration;
 import java.time.Instant;
@@ -38,9 +40,15 @@ public class Ecoclient {
     double pmouseX = 0;
     double pmouseY = 0;
 
+    double clickX = 0;
+    double clickY = 0;
+
     double scalex = 1;
 
     float translate = 1f;
+
+    TrueTypeFont font;
+
 
     public Ecoclient(Ecosystem ecosystem) {
 
@@ -62,7 +70,6 @@ public class Ecoclient {
     private void init() {
         // TODO Find way to get exact number of buttons on mouse
         mouseButtons = new int[5];
-
 
         // GLFW Error callbacks
         GLFWErrorCallback.createPrint(System.err).set();
@@ -90,15 +97,23 @@ public class Ecoclient {
             // Sets mouse button in array to either 1 or 0, clicked or not
             mouseButtons[button] = action;
 
-            if (button == 0 && action == 0) {
-                // Convert mouse coordinates on screen to world coordinates
-                float mWorldX = (((float) mouseX(window) - windowWidth / 2) * totalZoomScale) - transX;
-                float mWorldY = (((float) mouseY(window) - windowHeight / 2) * totalZoomScale) - transY;
+            if(button == 0 && action == 1) {
+                clickX = mouseX(window);
+                clickY = mouseY(window);
+            }
 
-                for (Organism o : ecosystem.organisms) {
-                    // If the world mouse coordinates are inside of organism's circle,
-                    if (Math.hypot(mWorldX - o.x, mWorldY - o.y) < o.size) {
-                        o.printData();
+            if (button == 0 && action == 0) {
+
+                if(clickX == mouseX(window) && clickY == mouseY(window)) {
+                    // Convert mouse coordinates on screen to world coordinates
+                    float mWorldX = (((float) mouseX(window) - windowWidth / 2) * totalZoomScale) - transX;
+                    float mWorldY = (((float) mouseY(window) - windowHeight / 2) * totalZoomScale) - transY;
+
+                    for (Organism o : ecosystem.organisms) {
+                        // If the world mouse coordinates are inside of organism's circle,
+                        if (Math.hypot(mWorldX - o.x, mWorldY - o.y) < o.size) {
+                            o.printData();
+                        }
                     }
                 }
             }
