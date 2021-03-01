@@ -18,7 +18,7 @@ public class Herbivore extends Animal{
 	public void huntTarget() {
 		if(target.size > 0.05) {
 			target.size -= 0.05;
-			this.size += 0.05;
+			this.size += 0.025;
 		} else {
 			target = null;
 		}

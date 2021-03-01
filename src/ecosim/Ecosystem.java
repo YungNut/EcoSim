@@ -40,7 +40,7 @@ public class Ecosystem {
 
         for (int i = 0; i < pSpecies; i++) {
             for (int n = 0; n < pCount; n++) {
-                Plant p = new Plant(r.nextInt(worldWidth), r.nextInt(worldHeight), 32);
+                Plant p = new Plant(r.nextInt(worldWidth), r.nextInt(worldHeight), ((float)(Math.random() * (40 - 20)) + 20));
                 p.species = (short) i;
                 p.generation = 0;
                 organisms.add(p);
