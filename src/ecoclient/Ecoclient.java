@@ -4,12 +4,8 @@ import ecosim.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
-import sun.font.TrueTypeFont;
 
-import java.awt.*;
 import java.nio.DoubleBuffer;
-import java.time.Duration;
-import java.time.Instant;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -47,8 +43,6 @@ public class Ecoclient {
 
     float translate = 1f;
 
-    TrueTypeFont font;
-
 
     public Ecoclient(Ecosystem ecosystem) {
 
@@ -83,7 +77,7 @@ public class Ecoclient {
 //		glfwWindowHint(GLFW_SAMPLES, 4);
 
         // Create the window
-        window = glfwCreateWindow(windowWidth, windowHeight, "Ecosim", NULL, NULL);
+        window = glfwCreateWindow(windowWidth, windowHeight, "ecoSim", NULL, NULL);
         if (window == NULL)
             throw new RuntimeException("Failed to create the GLFW window");
 
@@ -97,14 +91,14 @@ public class Ecoclient {
             // Sets mouse button in array to either 1 or 0, clicked or not
             mouseButtons[button] = action;
 
-            if(button == 0 && action == 1) {
+            if (button == 0 && action == 1) {
                 clickX = mouseX(window);
                 clickY = mouseY(window);
             }
 
             if (button == 0 && action == 0) {
 
-                if(clickX == mouseX(window) && clickY == mouseY(window)) {
+                if (clickX == mouseX(window) && clickY == mouseY(window)) {
                     // Convert mouse coordinates on screen to world coordinates
                     float mWorldX = (((float) mouseX(window) - windowWidth / 2) * totalZoomScale) - transX;
                     float mWorldY = (((float) mouseY(window) - windowHeight / 2) * totalZoomScale) - transY;
@@ -120,6 +114,9 @@ public class Ecoclient {
         });
 
         glfwSetScrollCallback(window, (window, xoffset, yoffset) -> {
+
+            scrollDir = (int) yoffset;
+
 
             float zoomScale = 1;
 
@@ -181,7 +178,7 @@ public class Ecoclient {
 
             glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-            for (int i = ecosystem.organisms.size()-1; i > 0; i--) {
+            for (int i = ecosystem.organisms.size() - 1; i > 0; i--) {
                 Organism o = ecosystem.organisms.get(i);
 
                 o.update(ecosystem);
@@ -192,14 +189,28 @@ public class Ecoclient {
                 }
             }
 
+            if (scrollDir != 0) {
+                // Draw crosshair on center of screen (zoom origin)
+                glBegin(GL_LINES);
+                glColor4f(0, 0, 0, 0.1f);
+                glVertex2i(Math.round(-10 * totalZoomScale - transX),0 - (int)transY);
+                glVertex2i(Math.round(9 * totalZoomScale - transX), 0 - (int)transY);
+
+                glVertex2i(0-(int)transX, Math.round(-10*totalZoomScale-transY));
+                glVertex2i(0-(int)transX, Math.round(9*totalZoomScale-transY));
+                glEnd();
+                // Reset Scroll direction to neutral
+                scrollDir = 0;
+            }
+
+
 
             glfwSwapBuffers(window); // swap the color buffers
 
             // Poll for window events to invoke key callback
             glfwPollEvents();
 
-            // Reset Scroll direction to neutral
-            scrollDir = 0;
+
 
             // Calculate and print FPS
             long time = System.nanoTime();
